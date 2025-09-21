@@ -4,6 +4,39 @@ export function generateId(): string {
   return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
 }
 
+// Converter entrada de porcentagem para decimal
+export function parsePercentage(value: string): number {
+  if (!value || value === '') return 0;
+  
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) return 0;
+  
+  // Se o valor for maior que 1, assumir que é uma porcentagem (ex: 15 = 15%)
+  // Se for menor ou igual a 1, assumir que já está em formato decimal (ex: 0.15 = 15%)
+  return numValue > 1 ? numValue / 100 : numValue;
+}
+
+// Converter entrada de taxa do marketplace
+export function parseMarketplaceFee(value: string, salePrice: number): number {
+  if (!value || value === '') return 0;
+  
+  const numValue = parseFloat(value);
+  if (isNaN(numValue)) return 0;
+  
+  // Se o valor for maior que 1 e menor ou igual a 100, assumir que é uma porcentagem
+  if (numValue > 1 && numValue <= 100) {
+    return (numValue / 100) * salePrice;
+  }
+  
+  // Se for menor ou igual a 1, assumir que é uma porcentagem em decimal
+  if (numValue <= 1) {
+    return numValue * salePrice;
+  }
+  
+  // Caso contrário, assumir que é um valor fixo em reais
+  return numValue;
+}
+
 export function calculateAdMetrics(ad: Omit<Ad, 'lucroBruto' | 'percentualLucro'>): Ad {
   const { precoVenda, precoCusto, taxaMarketplace, aliquotaImposto, frete } = ad;
   
@@ -48,12 +81,14 @@ export function calculateSummary(ads: Ad[]): AdSummary {
 }
 
 export function parseFormData(formData: AdFormData): Omit<Ad, 'id' | 'lucroBruto' | 'percentualLucro'> {
+  const precoVenda = parseFloat(formData.precoVenda) || 0;
+  
   return {
     produtoAnuncio: formData.produtoAnuncio.trim(),
-    precoVenda: parseFloat(formData.precoVenda) || 0,
+    precoVenda,
     precoCusto: parseFloat(formData.precoCusto) || 0,
-    taxaMarketplace: parseFloat(formData.taxaMarketplace) || 0,
-    aliquotaImposto: parseFloat(formData.aliquotaImposto) || 0,
+    taxaMarketplace: parseMarketplaceFee(formData.taxaMarketplace, precoVenda),
+    aliquotaImposto: parsePercentage(formData.aliquotaImposto),
     frete: parseFloat(formData.frete) || 0
   };
 }

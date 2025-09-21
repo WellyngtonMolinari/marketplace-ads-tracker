@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input.jsx';
 import { Label } from '@/components/ui/label.jsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Plus } from 'lucide-react';
+import { ProductSelector } from './ProductSelector.jsx';
 
 export function AdForm({ onAddAd }) {
   const [formData, setFormData] = useState({
@@ -15,6 +16,8 @@ export function AdForm({ onAddAd }) {
     frete: ''
   });
 
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -23,12 +26,21 @@ export function AdForm({ onAddAd }) {
     }));
   };
 
+  const handleProductSelect = (product) => {
+    setSelectedProduct(product);
+    setFormData(prev => ({
+      ...prev,
+      produtoAnuncio: product.nome,
+      precoCusto: product.precoCusto?.toString() || ''
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
     // Validação básica
     if (!formData.produtoAnuncio.trim()) {
-      alert('Por favor, insira o nome do produto/anúncio');
+      alert('Por favor, selecione ou digite o nome do produto/anúncio');
       return;
     }
     
@@ -48,6 +60,7 @@ export function AdForm({ onAddAd }) {
       aliquotaImposto: '',
       frete: ''
     });
+    setSelectedProduct(null);
   };
 
   return (
@@ -61,17 +74,26 @@ export function AdForm({ onAddAd }) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Seleção de Produto */}
             <div className="md:col-span-2">
-              <Label htmlFor="produtoAnuncio">Produto / Anúncio *</Label>
-              <Input
-                id="produtoAnuncio"
-                name="produtoAnuncio"
-                type="text"
-                value={formData.produtoAnuncio}
-                onChange={handleChange}
-                placeholder="Ex: Camiseta Estampada"
-                required
-              />
+              <Label>Produto / Anúncio *</Label>
+              <div className="space-y-2">
+                <ProductSelector 
+                  onProductSelect={handleProductSelect}
+                  selectedProductId={selectedProduct?.$id}
+                />
+                <Input
+                  name="produtoAnuncio"
+                  type="text"
+                  value={formData.produtoAnuncio}
+                  onChange={handleChange}
+                  placeholder="Ou digite o nome do produto manualmente"
+                  required
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione um produto cadastrado ou digite manualmente
+              </p>
             </div>
             
             <div>
@@ -101,6 +123,11 @@ export function AdForm({ onAddAd }) {
                 onChange={handleChange}
                 placeholder="35.00"
               />
+              {selectedProduct && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✓ Preenchido automaticamente do produto selecionado
+                </p>
+              )}
             </div>
             
             <div>
@@ -108,15 +135,13 @@ export function AdForm({ onAddAd }) {
               <Input
                 id="taxaMarketplace"
                 name="taxaMarketplace"
-                type="number"
-                step="0.01"
-                min="0"
+                type="text"
                 value={formData.taxaMarketplace}
                 onChange={handleChange}
-                placeholder="0.15 (15%) ou 10.50 (R$)"
+                placeholder="15 (15%) ou 10.50 (R$)"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Use 0.15 para 15% ou 10.50 para R$ 10,50
+                Use 15 para 15% ou 10.50 para R$ 10,50
               </p>
             </div>
             
@@ -126,15 +151,15 @@ export function AdForm({ onAddAd }) {
                 id="aliquotaImposto"
                 name="aliquotaImposto"
                 type="number"
-                step="0.01"
+                step="0.1"
                 min="0"
-                max="1"
+                max="100"
                 value={formData.aliquotaImposto}
                 onChange={handleChange}
-                placeholder="0.10 (10%)"
+                placeholder="10 (10%)"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Use 0.10 para 10%
+                Use 10 para 10%
               </p>
             </div>
             
